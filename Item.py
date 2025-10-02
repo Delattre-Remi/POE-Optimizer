@@ -1,0 +1,56 @@
+from Enums import CraftingCondition, ItemRarity, ItemSubtype, ItemType, ModifierType
+from Modifier import Modifier
+
+class Item:
+    name: str
+    type: ItemType
+    substype: ItemSubtype
+    rarity: ItemRarity
+    modifiers: list[Modifier]
+    ilevel: int
+    
+    def __init__(self, name: str, type: ItemType, substype: ItemSubtype, rarity: ItemRarity, modifiers: list, ilevel: int) -> None:
+        self.name = name
+        self.type = type
+        self.substype = substype
+        self.rarity = rarity
+        self.modifiers = modifiers
+        self.ilevel = ilevel
+        
+    def __repr__(self) -> str:
+        mods_str = f"\n"
+        self.modifiers.sort()
+        for mod in self.modifiers:
+            mods_str += f"> {mod}\n"
+        base_str = f"=== {self.rarity.value} {self.name} ilvl{self.ilevel} {self.substype.value} ==="
+        return base_str + mods_str + '='*len(base_str) + "\n"
+    
+    def countModifier(self, modifierType: ModifierType):
+        return sum(1 for mod in self.modifiers if mod.type == modifierType)
+    
+    def hasOpenModifier(self, modifierType: ModifierType, numberOfOpenPrefixWanted = 1):
+        assert numberOfOpenPrefixWanted > 0
+        numberOfPrefix = self.countModifier(modifierType)
+        return (3 - numberOfPrefix) >= numberOfOpenPrefixWanted
+
+    def addModifier(self, modifier: Modifier):
+        assert self.hasOpenModifier(modifier.type)
+        assert modifier not in self.modifiers
+        self.modifiers.append(modifier)
+        
+    def satisfies(self, condition : CraftingCondition):
+        match condition:
+            case CraftingCondition.hasOpenPrefix:
+                return self.hasOpenModifier(ModifierType.Prefix)
+            case CraftingCondition.hasOpenSuffix:
+                return self.hasOpenModifier(ModifierType.Suffix)
+            case CraftingCondition.hasOpenAffix:
+                return self.hasOpenModifier(ModifierType.Prefix) or self.hasOpenModifier(ModifierType.Suffix)
+            case CraftingCondition.isNormal:
+                return self.rarity == ItemRarity.Normal
+            case CraftingCondition.isMagic:
+                return self.rarity == ItemRarity.Magic
+            case CraftingCondition.isRare:
+                return self.rarity == ItemRarity.Rare
+            case _:
+                exit(404)
