@@ -2,6 +2,7 @@
 from enum import Enum
 
 class ModifierType(Enum):
+    Corrupted = "Corrupted"
     Prefix = "Prefix"
     Suffix = "Suffix"
     Implicit = "Implicit"
@@ -14,6 +15,7 @@ class ItemType(Enum):
 
 class ItemSubtype(Enum):
     Bow = "Bow"
+    Ring = "Ring"
     
 class ItemRarity(Enum):
     Normal = "Normal"
@@ -28,3 +30,4 @@ class CraftingCondition(Enum):
     isNormal = "isNormal"
     isMagic = "isMagic"
     isRare = "isRare"
+    isNotEnchanted = "isNotEnchanted"

@@ -21,4 +21,13 @@ class PossibleItemOutcome:
         self.weight = weight
         
     def __repr__(self) -> str:
-        return f"<PossibleItemOutcome>\n{self.weight} Weight\n{self.item}"
+        return f"<PossibleItemOutcome> {self.weight} Weight Hash : {self.item.__hash__()}\n{self.item}"
+
+    def __hash__(self) -> int:
+        return self.item.__hash__()
+
+    def __eq__(self, value: object) -> bool:
+        return self.__hash__() == value.__hash__()
+    
+    def __lt__(self, value) -> bool:
+        return self.item < value.item
