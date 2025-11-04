@@ -7,7 +7,7 @@ class ModifierType(Enum):
     Suffix = "Suffix"
     Implicit = "Implicit"
     Enchantment = "Enchantment"
-    
+
 class ItemType(Enum):
     Weapon = "Weapon"
     Armor = "Armor"
@@ -16,13 +16,13 @@ class ItemType(Enum):
 class ItemSubtype(Enum):
     Bow = "Bow"
     Ring = "Ring"
-    
+
 class ItemRarity(Enum):
     Normal = "Normal"
     Magic = "Magic"
     Rare = "Rare"
     Unique = "Unique"
-    
+
 class CraftingCondition(Enum):
     hasOpenPrefix = "hasOpenPrefix"
     hasOpenSuffix = "hasOpenSuffix"
