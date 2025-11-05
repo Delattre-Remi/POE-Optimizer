@@ -25,6 +25,7 @@ class Modifier:
             ModifierType.Prefix:Fore.LIGHTBLUE_EX,
             ModifierType.Suffix:Fore.LIGHTGREEN_EX
         }
+        if self.type == ModifierType.Special : return ''
         tier_str = f"T{self.tier} " if self.type != ModifierType.Corrupted else ''
         return f"{color_dic[self.type]}{tier_str}{self.name}{Style.RESET_ALL}"
 
@@ -36,6 +37,7 @@ class Modifier:
 
     def __lt__(self, other: "Modifier") -> bool:
         dic = {
+            ModifierType.Special:999,
             ModifierType.Enchantment:4,
             ModifierType.Implicit:3,
             ModifierType.Prefix:2,
@@ -68,3 +70,4 @@ for mod in MODS :
     MODIFIERS[f"T{mod.tier} {mod.name}"] = mod
 
 MODIFIERS["Corrupted"] = Modifier("Corrupted", ModifierType.Corrupted, 1, [ItemSubtype.Bow], 1, 0)
+MODIFIERS["Base"] = Modifier("Base", ModifierType.Special, 1, [], 1, 0)

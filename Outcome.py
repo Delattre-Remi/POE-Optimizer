@@ -1,6 +1,5 @@
-from typing import Any
 from Item import Item
-from Modifier import Modifier
+from Modifier import Modifier, MODIFIERS
 
 class Outcome:
     addedModifiers: list[Modifier]
@@ -17,15 +16,16 @@ class PossibleItemOutcome:
     item: Item
     weight:int
 
-    def __init__(self, item: Item, weight: int) -> None:
+    def __init__(self, item: Item, addedModifier: Modifier = MODIFIERS["Base"], weight: int = 0) -> None:
         self.item = item
+        self.addedModifier = addedModifier
         self.weight = weight
 
     def __repr__(self) -> str:
-        return f"<PossibleItemOutcome> {self.weight} Weight Hash : {self.item.__hash__()}\n{self.item}"
+        return f"<PossibleItemOutcome>  {self.addedModifier} {self.weight} Weight Hash : {self.item.__hash__()}\n{self.item}"
 
     def __hash__(self) -> int:
-        return self.item.__hash__()
+        return hash((self.item, self.addedModifier))
 
     def __eq__(self, value: object) -> bool:
         return self.__hash__() == value.__hash__()

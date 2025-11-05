@@ -15,4 +15,5 @@ class CraftingElement:
         self.functionToApplyToItem = functionToApplyToItem
         
     def __repr__(self) -> str:
-        return f"{self.name} <<{self.possibleOutcomes}>>"
+        return f"{self.name}\n"
+        #return f"{self.name} <<{self.possibleOutcomes}>>"

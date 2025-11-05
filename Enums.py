@@ -7,6 +7,7 @@ class ModifierType(Enum):
     Suffix = "Suffix"
     Implicit = "Implicit"
     Enchantment = "Enchantment"
+    Special = "Special"
 
 class ItemType(Enum):
     Weapon = "Weapon"

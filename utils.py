@@ -2,6 +2,7 @@ from copy import deepcopy
 from CraftingElement import CraftingElement
 from Item import Item
 from Outcome import PossibleItemOutcome
+from CraftingTree import CraftingTree, CraftTreeNode, getSlammingOutcomes
 
 VERBOSE = False
 
@@ -10,22 +11,7 @@ def log(x):
     if VERBOSE :
         print(x)
 
-def getSlammingOutcomes(item : Item, craftingElem: CraftingElement) -> list[PossibleItemOutcome]:
-    if not all(item.satisfies(cond) for cond in craftingElem.conditions):
-        log(f"When slamming {craftingElem} on {item}, some conditions are not satisfied")
-        return []
-
-    outcomes : set[PossibleItemOutcome] = set()
-    for outcome in craftingElem.possibleOutcomes:
-        for modifier in outcome.addedModifiers:
-            if item.hasOpenModifier(modifier.type) and item.substype in modifier.applicableItems and modifier not in item.modifiers:
-                outcomes.add(PossibleItemOutcome(craftingElem.functionToApplyToItem(deepcopy(item), modifier), modifier.weight))
-            elif VERBOSE :
-                log(f"Skipped Outcome {modifier}")
-                continue
-    return list(outcomes)
-
-def findWaysToMakeItem(base_item : Item, target_item : Item, available_craftingElements : list[CraftingElement], max_steps = 10):
+def _findWaysToMakeItem(base_item : Item, target_item : Item, available_craftingElements : list[CraftingElement], max_steps = 10):
     candidatesForNextStep : list[Item] = [deepcopy(base_item)]
     explored_items : set[int] = set()
     for step in range(max_steps + 1):
@@ -45,3 +31,9 @@ def findWaysToMakeItem(base_item : Item, target_item : Item, available_craftingE
                         print("FOUND")
                         return 
                     candidatesForNextStep.append(deepcopy(outcome.item))
+
+def findWaysToMakeItem(base_item : Item, target_item : Item, available_craftingElements : list[CraftingElement], max_steps = 10):
+    tree = CraftingTree(base_item)
+    x = tree.find_paths_to_target(target_item, available_craftingElements, max_steps)
+    print(tree)
+    print(x)

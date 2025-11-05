@@ -16,6 +16,6 @@ for mod in MODIFIERS.values():
 class Currency(Enum):
     BaseItem = CraftingElement("BaseItem", [], [], lambda x: x)
     TransformationOrb = CraftingElement("TransformationOrb", [CraftingCondition.isNormal, CraftingCondition.hasOpenAffix], exaltedOrbOutcomes, transformItem)
-    AugmentationOrb = CraftingElement("TransformationOrb", [CraftingCondition.isMagic, CraftingCondition.hasOpenAffix], exaltedOrbOutcomes, augmentItem)
+    AugmentationOrb = CraftingElement("AugmentationOrb", [CraftingCondition.isMagic, CraftingCondition.hasOpenAffix], exaltedOrbOutcomes, augmentItem)
     ExaltedOrb = CraftingElement("ExaltedOrb", [CraftingCondition.isRare, CraftingCondition.hasOpenAffix], exaltedOrbOutcomes, exaltItem)
     VaalOrb = CraftingElement("VaalOrb", [CraftingCondition.isRare, CraftingCondition.isNotEnchanted], vallOrbOutcomes, vaalItem)
