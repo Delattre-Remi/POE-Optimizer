@@ -1,30 +1,35 @@
 from Item import Item
 from CraftingElement import CraftingElement
-from Outcome import PossibleItemOutcome
-from Modifier import MODIFIERS
-
-from copy import deepcopy
+from Outcome import PossibleItemOutcome, PossibleCurrencyEffect
 from collections import deque
-from typing import Any, Dict, List, Optional, Set, Tuple
+from functools import lru_cache
+from typing import Dict, List, Optional, Set, Tuple
 
+@lru_cache(maxsize=None)
 def getSlammingOutcomes(item : Item, craftingElem: CraftingElement) -> list[PossibleItemOutcome]:
     if not all(item.satisfies(cond) for cond in craftingElem.conditions):
-        #print(f"When slamming {craftingElem} on {item}, some conditions are not satisfied")
+        # print(f"When slamming {craftingElem} on \n{item}, some conditions are not satisfied")
         return []
+    
+    applicableOutcomes: list[PossibleCurrencyEffect] = []
 
     outcomes : set[PossibleItemOutcome] = set()
-    for outcome in craftingElem.possibleOutcomes:
-        for modifier in outcome.addedModifiers:
-            if item.hasOpenModifier(modifier.type) and item.substype in modifier.applicableItems and modifier not in item.modifiers:
-                outcomes.add(PossibleItemOutcome(craftingElem.functionToApplyToItem(deepcopy(item), modifier), modifier,modifier.weight))
+    for possibleCurrencyEffect in craftingElem.getPossibleCurrencyEffectsFor(item):
+        applicableOutcomes.append(possibleCurrencyEffect)
+    
+    for possibleCurrencyEffect in applicableOutcomes:
+        total_weight = sum([x.weight for x in applicableOutcomes])
+        outcome_probability = int((possibleCurrencyEffect.weight / total_weight) * 100)
+        outcomes.add(possibleCurrencyEffect.applyEffectOn(item, outcome_probability))
     return list(outcomes)
 
 class CraftTreeNode:
-    def __init__(self, outcome: PossibleItemOutcome, parent: Optional["CraftTreeNode"] = None, used_elem: Optional[CraftingElement] = None):
+    def __init__(self, outcome: PossibleItemOutcome, nodeProbability: int,parent: Optional["CraftTreeNode"] = None, used_elem: Optional[CraftingElement] = None):
         self.outcome = outcome
         self.parent = parent
         self.used_elem = used_elem
         self.children: Dict[CraftingElement, List["CraftTreeNode"]] = {}
+        self.nodeProbability: int = nodeProbability
 
     def add_child(self, elem: CraftingElement, child_node: "CraftTreeNode"):
         self.children.setdefault(elem, []).append(child_node)
@@ -49,21 +54,22 @@ class TreePath:
         for path in self.path:
             lines.append('=== New Path ===')
             for step in path:
-                lines.append(f"Using {step[0].name} weighs {step[1].weight}, and gives")
+                lines.append(f"Using {step[0].name}, and gives {step[1].probability}% chance to get")
                 lines.append(str(step[1].item))
         return "\n".join(lines)
 
 class CraftingTree:
     def __init__(self, root_item: Item):
-        self.root = CraftTreeNode(PossibleItemOutcome(root_item))
+        self.root = CraftTreeNode(PossibleItemOutcome(root_item), 100)
 
-    def find_paths_to_target(self,target_item: Item,available_elements: List[CraftingElement],max_depth: int = 10) -> TreePath:
+    def find_paths_to_target(self, target_item: Item, available_elements: List[CraftingElement], max_depth: int = 10) -> TreePath:
         found_paths = []
         visited: Set[int] = set()
 
         # BFS queue: (node, current_depth)
         queue = deque([(self.root, 0)])
         visited.add(hash(self.root.outcome))
+        visited_skip_count = 0
 
         while queue:
             node, depth = queue.popleft()
@@ -72,11 +78,12 @@ class CraftingTree:
 
             for elem in available_elements:
                 for outcome in getSlammingOutcomes(node.outcome.item, elem):
-                    outcome = outcome
                     h = hash(outcome)
-                    if h in visited: continue
+                    if h in visited: 
+                        visited_skip_count += 1
+                        continue
                     visited.add(h)
-                    child = CraftTreeNode(outcome, parent=node, used_elem=elem)
+                    child = CraftTreeNode(outcome, int((node.nodeProbability/100 * outcome.probability/100)*100),parent=node, used_elem=elem)
                     node.add_child(elem, child)
 
                     if outcome.item == target_item:
@@ -84,6 +91,7 @@ class CraftingTree:
                     else:
                         queue.append((child, depth + 1))
 
+        # print("Tree building skips :", visited_skip_count)
         return TreePath(found_paths)
 
     def __repr__(self) -> str:
@@ -94,9 +102,10 @@ class CraftingTree:
             for elem, children in node.children.items():
                 for i, child in enumerate(children):
                     branch = "└─" if i == len(children) - 1 else "├─"
-                    lines.append(f"{prefix}{branch}[{elem.name}] {child.outcome.addedModifier} → {child.outcome.item.rarity.value} {child.outcome.item.name}")
+                    full_prefix = f"{prefix}{branch}[{elem.name}]"
+                    lines.append(f"{full_prefix} Path Prob. {child.nodeProbability: >2}% | Child Prob. {child.outcome.probability: >2}% {child.outcome.functionParam}")# → {child.outcome.item.rarity.value} {child.outcome.item.name}")
                     next_prefix = prefix + ("   " if i == len(children) - 1 else "│  ")
                     walk(child, next_prefix)
 
         walk(self.root)
-        return "\n".join(lines)
+        return str(self.root.outcome.item.name) + '\n' + "\n".join(lines)

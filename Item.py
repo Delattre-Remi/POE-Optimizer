@@ -54,6 +54,11 @@ class Item:
         self.modifiers.append(modifier)
         self.modifiers.sort()
 
+    def removeModifier(self, modifier: Modifier):
+        assert modifier in self.modifiers
+        self.modifiers.remove(modifier)
+        self.modifiers.sort()
+
     def satisfies(self, condition : CraftingCondition):
         match condition:
             case CraftingCondition.hasOpenPrefix:
