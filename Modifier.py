@@ -16,6 +16,8 @@ class Modifier:
         self.applicableItems = applicableItems
         self.weight = weight
         self.ilevel_requirement = ilevel_requirement
+        self.dic = None
+        self.cached_hash = None
 
     def __repr__(self) -> str:
         color_dic = {
@@ -30,24 +32,29 @@ class Modifier:
         return f"{color_dic[self.type]}{tier_str}{self.name}{Style.RESET_ALL}"
 
     def __hash__(self) -> int:
-        return self.name.__hash__() + self.tier + self.type.value.__hash__()
-
+        if self.cached_hash is None :
+            self.cached_hash = hash((self.name, self.tier))
+        return self.cached_hash
+    
     def __eq__(self, value) -> bool:
-        return self.__hash__() - self.tier == value.__hash__() - value.tier
+        return self.name == value.name and self.tier == value.tier
 
     def __lt__(self, other: "Modifier") -> bool:
-        dic = {
-            ModifierType.Special:999,
-            ModifierType.Enchantment:4,
-            ModifierType.Implicit:3,
-            ModifierType.Prefix:2,
-            ModifierType.Suffix:1,
-            ModifierType.Corrupted:0
-        }
-        if dic[self.type] != dic[other.type]:
-            return dic[self.type] > dic[other.type]
+        try :
+            if self.dic[self.type] != self.dic[other.type]: # type: ignore
+                return self.dic[self.type] > self.dic[other.type] # type: ignore
+        except :
+            self.dic = {
+                ModifierType.Special:999,
+                ModifierType.Enchantment:4,
+                ModifierType.Implicit:3,
+                ModifierType.Prefix:2,
+                ModifierType.Suffix:1,
+                ModifierType.Corrupted:0
+            }
+            if self.dic[self.type] != self.dic[other.type]:
+                return self.dic[self.type] > self.dic[other.type]
         return self.name > other.name
-
 
 MODS = [
     Modifier("X% Increased physical damage", ModifierType.Prefix, 1, [ItemSubtype.Bow], 1, 82),
@@ -59,6 +66,9 @@ MODS = [
     Modifier("Adds X to X lightning damage", ModifierType.Prefix, 1, [ItemSubtype.Bow], 5, 82),
     #Modifier("Adds X to X cold damage", ModifierType.Prefix, 1, [ItemSubtype.Bow], 10, 82),
     Modifier("+X to level of all projectile skills", ModifierType.Suffix, 1, [ItemSubtype.Bow], 1, 82),
+    Modifier("+X to level of all projectile skills", ModifierType.Suffix, 2, [ItemSubtype.Bow], 5, 72),
+    Modifier("+X to level of all projectile skills", ModifierType.Suffix, 3, [ItemSubtype.Bow], 25, 62),
+    Modifier("+X to level of all projectile skills", ModifierType.Suffix, 4, [ItemSubtype.Bow], 50, 52),
     Modifier("+X to maximum life", ModifierType.Suffix, 1, [ItemSubtype.Ring], 10, 82),
     Modifier("+X to intelligence", ModifierType.Enchantment, 1,[ItemSubtype.Bow], 1, 0),
     Modifier("+X to strength", ModifierType.Enchantment, 1,[ItemSubtype.Bow], 1, 0),

@@ -7,7 +7,7 @@ from typing import Dict, List, Optional, Set, Tuple
 
 @lru_cache(maxsize=None)
 def getSlammingOutcomes(item : Item, craftingElem: CraftingElement) -> list[PossibleItemOutcome]:
-    if not all(item.satisfies(cond) for cond in craftingElem.conditions):
+    if not all(cond.value.isSatisfiedBy(item) for cond in craftingElem.conditions):
         # print(f"When slamming {craftingElem} on \n{item}, some conditions are not satisfied")
         return []
     
@@ -62,7 +62,7 @@ class CraftingTree:
     def __init__(self, root_item: Item):
         self.root = CraftTreeNode(PossibleItemOutcome(root_item), 100)
 
-    def find_paths_to_target(self, target_item: Item, available_elements: List[CraftingElement], max_depth: int = 10) -> TreePath:
+    def find_paths_to_target(self, target_item: Item, available_elements: List[CraftingElement], max_depth: int = 10) -> tuple[TreePath, int]:
         found_paths = []
         visited: Set[int] = set()
 
@@ -91,8 +91,7 @@ class CraftingTree:
                     else:
                         queue.append((child, depth + 1))
 
-        # print("Tree building skips :", visited_skip_count)
-        return TreePath(found_paths)
+        return TreePath(found_paths), visited_skip_count
 
     def __repr__(self) -> str:
         lines: List[str] = []
@@ -103,7 +102,7 @@ class CraftingTree:
                 for i, child in enumerate(children):
                     branch = "└─" if i == len(children) - 1 else "├─"
                     full_prefix = f"{prefix}{branch}[{elem.name}]"
-                    lines.append(f"{full_prefix} Path Prob. {child.nodeProbability: >2}% | Child Prob. {child.outcome.probability: >2}% {child.outcome.functionParam}")# → {child.outcome.item.rarity.value} {child.outcome.item.name}")
+                    lines.append(f"{full_prefix} Path Prob. {child.nodeProbability: >2}% | Child Prob. {child.outcome.probability: >2}% {child.outcome.functionParam} {child.outcome.item.__hash__()}")# → {child.outcome.item.rarity.value} {child.outcome.item.name}")
                     next_prefix = prefix + ("   " if i == len(children) - 1 else "│  ")
                     walk(child, next_prefix)
 

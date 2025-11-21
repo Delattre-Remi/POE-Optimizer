@@ -28,6 +28,7 @@ class CraftingCondition(Enum):
     hasOpenPrefix = "hasOpenPrefix"
     hasOpenSuffix = "hasOpenSuffix"
     hasOpenAffix = "hasOpenAffix"
+    hasLessThanTwoAffixes = "hasLessThanTwoAffixes"
     isNormal = "isNormal"
     isMagic = "isMagic"
     isRare = "isRare"

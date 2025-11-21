@@ -18,6 +18,13 @@ def transformItem(item: Item, modifier: Modifier) -> Item:
 def augmentItem(item: Item, modifier: Modifier) -> Item:
     assert modifier.type in [ModifierType.Prefix, ModifierType.Suffix]
     assert item.rarity == ItemRarity.Magic
+    assert len(item.modifiers) < 2
+    item.addModifier(modifier)
+    return item
+
+def regalItem(item: Item, modifier: Modifier) -> Item:
+    assert modifier.type in [ModifierType.Prefix, ModifierType.Suffix]
+    assert item.rarity == ItemRarity.Magic
     item.addModifier(modifier)
     item.rarity = ItemRarity.Rare
     return item

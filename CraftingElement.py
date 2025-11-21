@@ -1,7 +1,31 @@
-from Enums import CraftingCondition
 from Outcome import PossibleCurrencyEffect
-from Item import Item
-from Modifier import Modifier
+from Item import Item, ItemRarity
+from Modifier import Modifier, ModifierType
+from enum import Enum
+from typing import Any, Callable
+
+def _isNotEnchanted(item: Item):
+    for mod in item.modifiers:
+        if mod.type == ModifierType.Enchantment:
+            return False
+    return True
+
+class _CraftingCondition:
+    isSatisfiedBy: Callable
+    
+    def __init__(self, isSatisfiedBy: Callable) -> None:
+        self.isSatisfiedBy : Callable = isSatisfiedBy
+
+class CraftingCondition(Enum):
+    hasLessThanTwoAffixes = _CraftingCondition(lambda item : len(item.modifiers) < 2)
+    hasTwoAffixes         = _CraftingCondition(lambda item : len(item.modifiers) == 2)
+    hasOpenPrefix         = _CraftingCondition(lambda item : item.hasOpenModifier(ModifierType.Prefix))
+    hasOpenSuffix         = _CraftingCondition(lambda item : item.hasOpenModifier(ModifierType.Suffix))
+    hasOpenAffix          = _CraftingCondition(lambda item : item.hasOpenModifier(ModifierType.Prefix) or item.hasOpenModifier(ModifierType.Suffix))
+    isNormal              = _CraftingCondition(lambda item : item.rarity == ItemRarity.Normal)
+    isMagic               = _CraftingCondition(lambda item : item.rarity == ItemRarity.Magic)
+    isRare                = _CraftingCondition(lambda item : item.rarity == ItemRarity.Rare)
+    isNotEnchanted        = _CraftingCondition(_isNotEnchanted)
 
 class CraftingElement:
     name: str
@@ -32,10 +56,6 @@ class CraftingElement:
                 and item.hasOpenModifier(currentEffectModifier.type):
                     possibleCurrencyEffects.append(currentEffect)
         return possibleCurrencyEffects
-        
-    
-    def __hash__(self) -> int:
-        return hash(self.__repr__())
         
     def __repr__(self) -> str:
         return f"{self.name}"

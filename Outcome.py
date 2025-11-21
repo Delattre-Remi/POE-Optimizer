@@ -1,7 +1,7 @@
 from copy import deepcopy
 from typing import Callable
 from Item import Item
-from Modifier import Modifier      
+from Modifier import Modifier
 
 class PossibleItemOutcome:
     item: Item
@@ -17,7 +17,7 @@ class PossibleItemOutcome:
         return f"<PossibleItemOutcome> {self.functionParam} {self.probability} Weight Hash : {self.item.__hash__()}\n{self.item}"
 
     def __hash__(self) -> int:
-        return hash((self.item, self.functionParam, self.probability))
+        return self.item.__hash__() + self.probability
 
     def __eq__(self, value: object) -> bool:
         return self.__hash__() == value.__hash__()

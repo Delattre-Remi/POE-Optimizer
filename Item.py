@@ -1,4 +1,5 @@
-from Enums import CraftingCondition, ItemRarity, ItemSubtype, ItemType, ModifierType
+from functools import lru_cache
+from Enums import ItemRarity, ItemSubtype, ItemType, ModifierType
 from Modifier import Modifier
 
 class Item:
@@ -9,13 +10,14 @@ class Item:
     modifiers: list[Modifier]
     ilevel: int
 
-    def __init__(self, name: str, type: ItemType, substype: ItemSubtype, rarity: ItemRarity, modifiers: list[Modifier], ilevel: int) -> None:
-        self.name = name
+    def __init__(self, type: ItemType, substype: ItemSubtype, rarity: ItemRarity, modifiers: list[Modifier], ilevel: int) -> None:
+        self.name = str(substype.value) + " ilvl" + str(ilevel)
         self.type = type
         self.substype = substype
         self.rarity = rarity
         self.modifiers = modifiers
         self.ilevel = ilevel
+        self.cached_hash = None
 
     def __repr__(self) -> str:
         nbEquals = 25
@@ -26,15 +28,16 @@ class Item:
             mods_str += f"| {mod}" + " "*(6 + len(base_str)-len(str(mod))) + "|\n"
         return base_str + mods_str + '='*len(base_str) + "\n"
 
-    def __hash__(self):
-        return hash((
-            self.substype,
-            self.rarity,
-            tuple(self.modifiers),
-            self.ilevel
-        ))
+    def __hash__(self) -> int:
+        if self.cached_hash is None : 
+            h = 0
+            for x in self.modifiers:
+                h ^= hash(x)
+            self.cached_hash = h
+        return self.cached_hash
 
     def __eq__(self, other) -> bool:
+        if len(self.modifiers) != len(other.modifiers) : return False
         return self.__hash__() == other.__hash__()
 
     def __lt__(self, other) -> bool:
@@ -52,31 +55,9 @@ class Item:
         assert self.hasOpenModifier(modifier.type)
         assert modifier not in self.modifiers
         self.modifiers.append(modifier)
-        self.modifiers.sort()
+        self.cached_hash = None
 
     def removeModifier(self, modifier: Modifier):
         assert modifier in self.modifiers
         self.modifiers.remove(modifier)
-        self.modifiers.sort()
-
-    def satisfies(self, condition : CraftingCondition):
-        match condition:
-            case CraftingCondition.hasOpenPrefix:
-                return self.hasOpenModifier(ModifierType.Prefix)
-            case CraftingCondition.hasOpenSuffix:
-                return self.hasOpenModifier(ModifierType.Suffix)
-            case CraftingCondition.hasOpenAffix:
-                return self.hasOpenModifier(ModifierType.Prefix) or self.hasOpenModifier(ModifierType.Suffix)
-            case CraftingCondition.isNormal:
-                return self.rarity == ItemRarity.Normal
-            case CraftingCondition.isMagic:
-                return self.rarity == ItemRarity.Magic
-            case CraftingCondition.isRare:
-                return self.rarity == ItemRarity.Rare
-            case CraftingCondition.isNotEnchanted:
-                for mod in self.modifiers:
-                    if mod.type == ModifierType.Enchantment:
-                        return False
-                return True
-            case _:
-                exit(404)
+        self.cached_hash = None
